@@ -25,31 +25,52 @@ When opened, these permalinks redirect to the current canonical BookStack URL fo
 
 ## Installation
 
-Clone this repository into your BookStack `themes` directory:
+### Install via `bookstack:install-module`
+
+Once this repository has a published release asset, it can be installed directly with:
 
 ```bash
-cd /path/to/bookstack/themes
+php artisan bookstack:install-module https://github.com/patattzel/bookstack-persistent-permalinks/releases/latest/download/bookstack-persistent-permalinks.zip
+```
+
+This requires:
+- an active BookStack theme to already be configured
+- a release ZIP asset built from this repository
+
+The repository includes:
+- `scripts/package-module.sh` to build a compatible ZIP locally
+- `.github/workflows/release-module-zip.yml` to attach that ZIP to GitHub releases
+
+### Manual install into an active theme
+
+This repository is a standalone module package, not a full theme.
+Copy the repository contents into your active theme's `modules` folder, for example:
+
+```bash
+cd /path/to/bookstack/themes/<your-active-theme>/modules
 git clone https://github.com/patattzel/bookstack-persistent-permalinks.git persistent-permalinks
 ```
 
-Then enable the theme in your BookStack environment:
+Result:
 
-```env
-APP_THEME=persistent-permalinks
+```text
+themes/<your-active-theme>/modules/persistent-permalinks/
 ```
-
-After changing the theme configuration, clear/rebuild BookStack caches as you normally would for your installation.
 
 ## Structure
 
-This repository is an active BookStack theme containing a theme module:
+This repository is itself a BookStack theme module package:
 
 ```text
-themes/persistent-permalinks/
-└── modules/persistent-permalinks/
+bookstack-persistent-permalinks/
+├── bookstack-module.json
+├── functions.php
+├── lang/
+├── public/
+└── views/
 ```
 
-The module contains:
+The package contains:
 - `bookstack-module.json` for module metadata
 - `functions.php` for route registration
 - `views/` for the sidebar detail overrides
@@ -66,6 +87,6 @@ Clicking that row copies the stable permalink to the clipboard and shows a toast
 ## Files
 
 Main implementation paths:
-- `modules/persistent-permalinks/functions.php`
-- `modules/persistent-permalinks/views/permalink-module/details-link.blade.php`
-- `modules/persistent-permalinks/public/permalink-copy.js`
+- `functions.php`
+- `views/permalink-module/details-link.blade.php`
+- `public/permalink-copy.js`

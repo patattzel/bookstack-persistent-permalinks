@@ -20,7 +20,7 @@
 
     @once
         @push('body-end')
-            <script src="{{ url('/theme/persistent-permalinks/permalink-copy.js') }}"></script>
+            <script src="{{ url('/theme/' . \BookStack\Facades\Theme::getTheme() . '/permalink-copy.js') }}"></script>
         @endpush
     @endonce
 @endif
