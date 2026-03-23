@@ -20,7 +20,7 @@
 
     @once
         @push('body-end')
-            <script src="{{ url('/theme/' . \BookStack\Facades\Theme::getTheme() . '/permalink-copy.js') }}"></script>
+            <script src="{{ url('/theme/' . \BookStack\Facades\Theme::getTheme() . '/permalink-copy.js') }}" nonce="{{ $cspNonce }}"></script>
         @endpush
     @endonce
 @endif
