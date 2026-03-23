@@ -1,0 +1,5 @@
+{
+  "name": "persistent-permalinks",
+  "description": "Adds stable copyable permalinks to the details sidebar for shelves, books, chapters and pages.",
+  "version": "1.0.0"
+}
