@@ -27,24 +27,39 @@ When opened, these permalinks redirect to the current canonical BookStack URL fo
 
 ### Install via `bookstack:install-module`
 
-Once this repository has a published release asset, it can be installed directly with:
+Preferred install method:
 
 ```bash
 php artisan bookstack:install-module https://github.com/patattzel/bookstack-persistent-permalinks/releases/latest/download/bookstack-persistent-permalinks.zip
 ```
 
-This requires:
+Requirements:
 - an active BookStack theme to already be configured
-- a release ZIP asset built from this repository
+- a published GitHub release containing `bookstack-persistent-permalinks.zip`
 
-The repository includes:
-- `scripts/package-module.sh` to build a compatible ZIP locally
+BookStack expects a real module ZIP where `bookstack-module.json` exists at the ZIP root.
+The normal GitHub repository source ZIP is not suitable for `bookstack:install-module`.
+
+This repository includes:
+- `scripts/package-module.sh` to build a compatible ZIP locally into `dist/bookstack-persistent-permalinks.zip`
 - `.github/workflows/release-module-zip.yml` to attach that ZIP to GitHub releases
+
+Release flow for maintainers:
+1. Create a GitHub release from this repository.
+2. The GitHub Action builds `bookstack-persistent-permalinks.zip`.
+3. The workflow uploads that ZIP as a release asset.
+4. Users can then install via the `releases/latest/download/...` URL above.
+
+To build the installable ZIP locally:
+
+```bash
+bash scripts/package-module.sh
+```
 
 ### Manual install into an active theme
 
 This repository is a standalone module package, not a full theme.
-Copy the repository contents into your active theme's `modules` folder, for example:
+Copy or clone the repository into your active theme's `modules` folder, for example:
 
 ```bash
 cd /path/to/bookstack/themes/<your-active-theme>/modules
@@ -76,6 +91,7 @@ The package contains:
 - `views/` for the sidebar detail overrides
 - `lang/` for label and toast text
 - `public/` for the permalink copy JavaScript
+- `scripts/package-module.sh` for creating a BookStack-compatible release ZIP
 
 ## Usage
 

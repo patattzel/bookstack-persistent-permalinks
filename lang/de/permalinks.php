@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'label' => 'Permalink',
+    'label' => 'Copy Permalink',
     'copied' => 'Permalink kopiert',
     'copy_failed' => 'Permalink konnte nicht kopiert werden',
 ];
