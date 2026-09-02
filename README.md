@@ -20,8 +20,8 @@ When opened, these permalinks redirect to the current canonical BookStack URL fo
 - BookStack v26.03 or newer (the module uses BookStack's adjacent-view registration API).
 - This is an unsupported customization built on BookStack's theme/module system.
 - It adds custom authenticated web routes for book, chapter and shelf permalinks.
-- The copy interaction depends on JavaScript.
-- On failure, the permalink is still available as a normal link target and can be copied via the browser context menu.
+- The copy interaction and confirmation popup depend on JavaScript.
+- The permalink is always displayed in the popup so it can be selected and copied manually if browser clipboard access fails.
 
 ## Installation
 
@@ -97,14 +97,14 @@ The package contains:
 
 Open any shelf, book, chapter or page view in BookStack.
 
-In the `Details` sidebar you will see a `Permalink` row.
-Clicking that row copies the stable permalink to the clipboard and shows a toast notification.
+In the `Details` sidebar you will see a `Copy permalink` row.
+Clicking that row copies the stable permalink to the clipboard without opening it. A confirmation popup displays the permalink for manual copying and also provides a `Copy again` action.
 
 ## Compatibility
 
 The module inserts its own view after BookStack's `entities.meta` view instead of overriding complete sidebar templates. This keeps BookStack's sidebar and configurable layout updates intact.
 
-Clipboard writes use the modern Clipboard API in secure contexts and automatically fall back to the browser copy command if that API is unavailable or rejects the request.
+Clipboard writes use the modern Clipboard API in secure contexts and automatically fall back to the browser copy command if that API is unavailable or rejects the request. The sidebar action is a button rather than a link, so it cannot accidentally navigate to the permalink when JavaScript or clipboard access fails.
 
 ## Development
 
@@ -124,3 +124,4 @@ Main implementation paths:
 - `functions.php`
 - `views/permalink-module/details-link.blade.php`
 - `public/permalink-copy.js`
+- `public/permalink-copy.css`

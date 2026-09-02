@@ -5,12 +5,50 @@ import vm from 'node:vm';
 
 const script = await readFile(new URL('../public/permalink-copy.js', import.meta.url), 'utf8');
 
-function loadCopyScript({secureContext = true, writeText, execCommandResult = true} = {}) {
+function loadCopyScript({secureContext = true, writeText, execCommandResult = true, usePopupComponent = true} = {}) {
     let clickHandler = null;
     const appendedInputs = [];
     const removedInputs = [];
     const successMessages = [];
     const errorMessages = [];
+    const popupShows = [];
+    const statusClasses = new Set();
+
+    const popupInput = {
+        focused: false,
+        selected: false,
+        focus() {
+            this.focused = true;
+        },
+        select() {
+            this.selected = true;
+        },
+    };
+    const popupStatus = {
+        textContent: '',
+        classList: {
+            add(name) {
+                statusClasses.add(name);
+            },
+            remove(...names) {
+                for (const name of names) statusClasses.delete(name);
+            },
+        },
+    };
+    const popup = {
+        style: {},
+        querySelector(selector) {
+            if (selector === '[data-permalink-value]') return popupInput;
+            if (selector === '[data-permalink-status]') return popupStatus;
+            return null;
+        },
+    };
+    const popupComponent = {
+        show(onComplete) {
+            popupShows.push(popup);
+            if (onComplete) onComplete();
+        },
+    };
 
     const document = {
         body: {
@@ -22,9 +60,7 @@ function loadCopyScript({secureContext = true, writeText, execCommandResult = tr
             },
         },
         addEventListener(eventName, handler) {
-            if (eventName === 'click') {
-                clickHandler = handler;
-            }
+            if (eventName === 'click') clickHandler = handler;
         },
         createElement(tagName) {
             return {
@@ -49,6 +85,9 @@ function loadCopyScript({secureContext = true, writeText, execCommandResult = tr
             assert.equal(command, 'copy');
             return execCommandResult;
         },
+        getElementById(id) {
+            return id === 'permalink-popup' ? popup : null;
+        },
     };
 
     const window = {
@@ -62,6 +101,15 @@ function loadCopyScript({secureContext = true, writeText, execCommandResult = tr
             },
         },
     };
+    if (usePopupComponent) {
+        window.$components = {
+            firstOnElement(element, name) {
+                assert.equal(element, popup);
+                assert.equal(name, 'popup');
+                return popupComponent;
+            },
+        };
+    }
 
     const navigator = {
         clipboard: writeText ? {writeText} : undefined,
@@ -74,16 +122,23 @@ function loadCopyScript({secureContext = true, writeText, execCommandResult = tr
         appendedInputs,
         clickHandler,
         errorMessages,
+        popup,
+        popupInput,
+        popupShows,
+        popupStatus,
         removedInputs,
+        statusClasses,
         successMessages,
     };
 }
 
 function createClick(url = 'https://bookstack.example/link/42') {
     let prevented = false;
-    const link = {
+    const trigger = {
         dataset: {
             copyPermalink: url,
+            copyPopup: 'permalink-popup',
+            copyPending: 'Copying',
             copySuccess: 'Copied',
             copyError: 'Copy failed',
         },
@@ -93,8 +148,7 @@ function createClick(url = 'https://bookstack.example/link/42') {
         event: {
             target: {
                 closest(selector) {
-                    assert.equal(selector, '[data-copy-permalink]');
-                    return link;
+                    return selector === '[data-copy-permalink]' ? trigger : null;
                 },
             },
             preventDefault() {
@@ -107,7 +161,7 @@ function createClick(url = 'https://bookstack.example/link/42') {
     };
 }
 
-test('copies a permalink with the Clipboard API in a secure context', async () => {
+test('copies a permalink and shows a confirmation popup', async () => {
     const copied = [];
     const loaded = loadCopyScript({
         writeText: async text => copied.push(text),
@@ -118,6 +172,11 @@ test('copies a permalink with the Clipboard API in a secure context', async () =
 
     assert.equal(click.wasPrevented(), true);
     assert.deepEqual(copied, ['https://bookstack.example/link/42']);
+    assert.deepEqual(loaded.popupShows, [loaded.popup]);
+    assert.equal(loaded.popupInput.focused, true);
+    assert.equal(loaded.popupInput.selected, true);
+    assert.equal(loaded.popupStatus.textContent, 'Copied');
+    assert.deepEqual([...loaded.statusClasses], ['text-pos']);
     assert.deepEqual(loaded.successMessages, ['Copied']);
     assert.deepEqual(loaded.errorMessages, []);
     assert.equal(loaded.appendedInputs.length, 0);
@@ -139,6 +198,7 @@ test('falls back when the Clipboard API rejects the write', async () => {
     assert.equal(loaded.appendedInputs[0].focused, true);
     assert.equal(loaded.appendedInputs[0].selected, true);
     assert.deepEqual(loaded.removedInputs, loaded.appendedInputs);
+    assert.equal(loaded.popupStatus.textContent, 'Copied');
     assert.deepEqual(loaded.successMessages, ['Copied']);
     assert.deepEqual(loaded.errorMessages, []);
 });
@@ -158,7 +218,7 @@ test('uses the fallback in an insecure context', async () => {
     assert.deepEqual(loaded.successMessages, ['Copied']);
 });
 
-test('shows an error when both copy methods fail', async () => {
+test('shows the manual link and an error when both copy methods fail', async () => {
     const loaded = loadCopyScript({
         execCommandResult: false,
         writeText: async () => {
@@ -171,7 +231,40 @@ test('shows an error when both copy methods fail', async () => {
 
     assert.deepEqual(loaded.successMessages, []);
     assert.deepEqual(loaded.errorMessages, ['Copy failed']);
+    assert.equal(loaded.popupStatus.textContent, 'Copy failed');
+    assert.deepEqual([...loaded.statusClasses], ['text-neg']);
+    assert.equal(loaded.popupInput.selected, true);
     assert.deepEqual(loaded.removedInputs, loaded.appendedInputs);
+});
+
+test('shows the popup without BookStack component helpers', async () => {
+    const loaded = loadCopyScript({
+        usePopupComponent: false,
+        writeText: async () => {},
+    });
+
+    await loaded.clickHandler(createClick().event);
+
+    assert.equal(loaded.popup.style.display, 'flex');
+    assert.equal(loaded.popupInput.selected, true);
+});
+
+test('selects the displayed permalink when it is clicked', async () => {
+    const loaded = loadCopyScript();
+    let selected = false;
+
+    await loaded.clickHandler({
+        target: {
+            closest(selector) {
+                if (selector === '[data-permalink-value]') {
+                    return {select: () => selected = true};
+                }
+                return null;
+            },
+        },
+    });
+
+    assert.equal(selected, true);
 });
 
 test('ignores clicks outside a permalink without assuming an Element target', async () => {

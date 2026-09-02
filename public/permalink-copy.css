@@ -1,0 +1,16 @@
+.permalink-copy-trigger {
+    width: 100%;
+    padding: 0;
+    color: var(--color-link);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: start;
+}
+
+.permalink-copy-status {
+    min-height: 1.4em;
+}
+
+.permalink-copy-value {
+    cursor: text;
+}
