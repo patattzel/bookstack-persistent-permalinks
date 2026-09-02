@@ -11,32 +11,49 @@
         }
     }
 
-    async function copyText(text) {
-        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
-            await navigator.clipboard.writeText(text);
-            return;
-        }
-
-        const input = document.createElement('input');
-        input.type = 'text';
+    function copyTextFallback(text, clipboardError) {
+        const input = document.createElement('textarea');
         input.value = text;
         input.setAttribute('readonly', 'readonly');
-        input.style.position = 'absolute';
+        input.setAttribute('aria-hidden', 'true');
+        input.style.position = 'fixed';
         input.style.left = '-9999px';
+        input.style.top = '0';
         document.body.appendChild(input);
-        input.select();
-        input.setSelectionRange(0, input.value.length);
 
-        const copied = document.execCommand('copy');
-        document.body.removeChild(input);
+        try {
+            input.focus();
+            input.select();
 
-        if (!copied) {
-            throw new Error('Copy command failed');
+            if (!document.execCommand('copy')) {
+                throw clipboardError || new Error('Copy command failed');
+            }
+        } finally {
+            document.body.removeChild(input);
         }
     }
 
+    async function copyText(text) {
+        let clipboardError = null;
+
+        if (window.isSecureContext && navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+            try {
+                await navigator.clipboard.writeText(text);
+                return;
+            } catch (error) {
+                clipboardError = error;
+            }
+        }
+
+        copyTextFallback(text, clipboardError);
+    }
+
     document.addEventListener('click', async function(event) {
-        const link = event.target.closest('[data-copy-permalink]');
+        const target = event.target;
+        const link = target && typeof target.closest === 'function'
+            ? target.closest('[data-copy-permalink]')
+            : null;
+
         if (!link) {
             return;
         }

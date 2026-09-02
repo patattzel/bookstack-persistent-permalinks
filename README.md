@@ -15,10 +15,10 @@ For books, chapters and shelves, this module adds equivalent redirect routes:
 
 When opened, these permalinks redirect to the current canonical BookStack URL for the target entity.
 
-## Considerations
+## Requirements and considerations
 
+- BookStack v26.03 or newer (the module uses BookStack's adjacent-view registration API).
 - This is an unsupported customization built on BookStack's theme/module system.
-- It overrides the four `show-sidebar-section-details` Blade views for shelves, books, chapters and pages.
 - It adds custom authenticated web routes for book, chapter and shelf permalinks.
 - The copy interaction depends on JavaScript.
 - On failure, the permalink is still available as a normal link target and can be copied via the browser context menu.
@@ -87,8 +87,8 @@ bookstack-persistent-permalinks/
 
 The package contains:
 - `bookstack-module.json` for module metadata
-- `functions.php` for route registration
-- `views/` for the sidebar detail overrides
+- `functions.php` for route and adjacent-view registration
+- `views/` for the permalink row inserted after BookStack's entity metadata
 - `lang/` for label and toast text
 - `public/` for the permalink copy JavaScript
 - `scripts/package-module.sh` for creating a BookStack-compatible release ZIP
@@ -99,6 +99,24 @@ Open any shelf, book, chapter or page view in BookStack.
 
 In the `Details` sidebar you will see a `Permalink` row.
 Clicking that row copies the stable permalink to the clipboard and shows a toast notification.
+
+## Compatibility
+
+The module inserts its own view after BookStack's `entities.meta` view instead of overriding complete sidebar templates. This keeps BookStack's sidebar and configurable layout updates intact.
+
+Clipboard writes use the modern Clipboard API in secure contexts and automatically fall back to the browser copy command if that API is unavailable or rejects the request.
+
+## Development
+
+Run the JavaScript tests and basic syntax checks with:
+
+```bash
+node --test tests/permalink-copy.test.mjs
+php -l functions.php
+node --check public/permalink-copy.js
+bash scripts/package-module.sh
+unzip -t dist/bookstack-persistent-permalinks.zip
+```
 
 ## Files
 

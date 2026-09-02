@@ -5,6 +5,7 @@ use BookStack\Entities\Queries\BookshelfQueries;
 use BookStack\Entities\Queries\ChapterQueries;
 use BookStack\Facades\Theme;
 use BookStack\Theming\ThemeEvents;
+use BookStack\Theming\ThemeViews;
 use Illuminate\Routing\Router;
 
 Theme::listen(ThemeEvents::ROUTES_REGISTER_WEB_AUTH, function (Router $router) {
@@ -22,4 +23,8 @@ Theme::listen(ThemeEvents::ROUTES_REGISTER_WEB_AUTH, function (Router $router) {
         $shelf = app(BookshelfQueries::class)->findVisibleByIdOrFail($id);
         return redirect($shelf->getUrl());
     });
+});
+
+Theme::listen(ThemeEvents::THEME_REGISTER_VIEWS, function (ThemeViews $themeViews) {
+    $themeViews->renderAfter('entities.meta', 'permalink-module.details-link', 10);
 });

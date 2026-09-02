@@ -1,0 +1,95 @@
+name: Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check PHP and JavaScript syntax
+        run: |
+          php -l functions.php
+          php -l lang/de/permalinks.php
+          php -l lang/en/permalinks.php
+          node --check public/permalink-copy.js
+
+      - name: Run JavaScript tests
+        run: node --test tests/permalink-copy.test.mjs
+
+      - name: Build and validate module archive
+        run: |
+          bash scripts/package-module.sh
+          unzip -t dist/bookstack-persistent-permalinks.zip
+
+  bookstack-integration:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        bookstack-ref: [v26.05.4, development]
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: bookstack-test
+          MYSQL_USER: bookstack-test
+          MYSQL_PASSWORD: bookstack-test
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - name: Check out module
+        uses: actions/checkout@v4
+        with:
+          path: module
+
+      - name: Check out BookStack ${{ matrix.bookstack-ref }}
+        uses: actions/checkout@v4
+        with:
+          repository: BookStackApp/BookStack
+          ref: ${{ matrix.bookstack-ref }}
+          path: bookstack
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Install BookStack dependencies
+        working-directory: bookstack
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare BookStack test database
+        working-directory: bookstack
+        run: |
+          php artisan migrate --force --database=mysql_testing
+          php artisan db:seed --force --class=DummyContentSeeder --database=mysql_testing
+
+      - name: Install module test fixture
+        run: |
+          mkdir -p bookstack/themes/persistent-permalinks
+          rsync -a --exclude='.git' --exclude='dist' module/ bookstack/themes/persistent-permalinks/
+          cp module/tests/bookstack/PersistentPermalinksIntegrationTest.php bookstack/tests/Theme/
+
+      - name: Run BookStack integration tests
+        working-directory: bookstack
+        run: php artisan test tests/Theme/PersistentPermalinksIntegrationTest.php
