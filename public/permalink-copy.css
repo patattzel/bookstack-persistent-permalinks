@@ -7,6 +7,10 @@
     text-align: start;
 }
 
+.permalink-copy-popup {
+    z-index: 2147483647;
+}
+
 .permalink-copy-status {
     min-height: 1.4em;
 }

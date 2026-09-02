@@ -25,7 +25,7 @@
 
     <div component="popup"
          id="{{ $popupId }}"
-         class="popup-background"
+         class="popup-background permalink-copy-popup"
          role="dialog"
          aria-modal="true"
          aria-labelledby="{{ $popupId }}-title">

@@ -65,6 +65,13 @@
             return popup;
         }
 
+        // Adjacent views can be rendered inside transformed layout columns. In that
+        // case a fixed popup remains trapped in the column's stacking context.
+        // Moving it to the body makes the overlay cover the complete viewport.
+        if (popup.parentElement !== document.body) {
+            document.body.appendChild(popup);
+        }
+
         const focusLink = function() {
             const input = popup.querySelector('[data-permalink-value]');
             if (input) {

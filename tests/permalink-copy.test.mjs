@@ -11,6 +11,7 @@ function loadCopyScript({secureContext = true, writeText, execCommandResult = tr
     const removedInputs = [];
     const successMessages = [];
     const errorMessages = [];
+    const popupMoves = [];
     const popupShows = [];
     const statusClasses = new Set();
 
@@ -36,6 +37,7 @@ function loadCopyScript({secureContext = true, writeText, execCommandResult = tr
         },
     };
     const popup = {
+        parentElement: {id: 'sidebar'},
         style: {},
         querySelector(selector) {
             if (selector === '[data-permalink-value]') return popupInput;
@@ -53,7 +55,12 @@ function loadCopyScript({secureContext = true, writeText, execCommandResult = tr
     const document = {
         body: {
             appendChild(input) {
-                appendedInputs.push(input);
+                if (input === popup) {
+                    popup.parentElement = this;
+                    popupMoves.push(input);
+                } else {
+                    appendedInputs.push(input);
+                }
             },
             removeChild(input) {
                 removedInputs.push(input);
@@ -124,6 +131,7 @@ function loadCopyScript({secureContext = true, writeText, execCommandResult = tr
         errorMessages,
         popup,
         popupInput,
+        popupMoves,
         popupShows,
         popupStatus,
         removedInputs,
@@ -172,6 +180,7 @@ test('copies a permalink and shows a confirmation popup', async () => {
 
     assert.equal(click.wasPrevented(), true);
     assert.deepEqual(copied, ['https://bookstack.example/link/42']);
+    assert.deepEqual(loaded.popupMoves, [loaded.popup]);
     assert.deepEqual(loaded.popupShows, [loaded.popup]);
     assert.equal(loaded.popupInput.focused, true);
     assert.equal(loaded.popupInput.selected, true);

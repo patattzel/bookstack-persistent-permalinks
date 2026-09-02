@@ -25,7 +25,7 @@ class PersistentPermalinksIntegrationTest extends TestCase
                 $html = $this->withHtml($response);
                 $popupId = 'permalink-copy-popup-' . $entity->getType() . '-' . $entity->id;
                 $html->assertElementExists('button.entity-meta-item[data-copy-permalink="' . $url . '"][data-copy-popup="' . $popupId . '"]');
-                $html->assertElementExists('div#' . $popupId . '[component="popup"][role="dialog"]');
+                $html->assertElementExists('div#' . $popupId . '.permalink-copy-popup[component="popup"][role="dialog"]');
                 $html->assertElementExists('#' . $popupId . ' input[data-permalink-value][value="' . $url . '"][readonly]');
                 $html->assertElementExists('style[data-permalink-copy-style][nonce]');
                 $html->assertElementExists('script[data-permalink-copy-script][nonce]');

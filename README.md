@@ -102,7 +102,7 @@ Clicking that row copies the stable permalink to the clipboard without opening i
 
 ## Compatibility
 
-The module inserts its own view after BookStack's `entities.meta` view instead of overriding complete sidebar templates. This keeps BookStack's sidebar and configurable layout updates intact.
+The module inserts its own view after BookStack's `entities.meta` view instead of overriding complete sidebar templates. This keeps BookStack's sidebar and configurable layout updates intact. When opened, the popup is moved to the document body so transformed or layered custom layouts cannot trap it in a sidebar stacking context.
 
 Clipboard writes use the modern Clipboard API in secure contexts and automatically fall back to the browser copy command if that API is unavailable or rejects the request. The sidebar action is a button rather than a link, so it cannot accidentally navigate to the permalink when JavaScript or clipboard access fails. The small module assets are embedded into the page with the BookStack CSP nonce, avoiding web-server-specific MIME type detection for theme JavaScript.
 
