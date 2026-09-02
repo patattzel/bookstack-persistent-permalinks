@@ -74,10 +74,14 @@
 
     @once
         @push('head')
-            <link rel="stylesheet" href="{{ url('/theme/' . \BookStack\Facades\Theme::getTheme() . '/permalink-copy.css') }}?v=1.2.0">
+            <style data-permalink-copy-style nonce="{{ $cspNonce }}">
+                {!! file_get_contents(\BookStack\Facades\Theme::findFirstFile('public/permalink-copy.css')) !!}
+            </style>
         @endpush
         @push('body-end')
-            <script src="{{ url('/theme/' . \BookStack\Facades\Theme::getTheme() . '/permalink-copy.js') }}?v=1.2.0" nonce="{{ $cspNonce }}"></script>
+            <script data-permalink-copy-script nonce="{{ $cspNonce }}">
+                {!! file_get_contents(\BookStack\Facades\Theme::findFirstFile('public/permalink-copy.js')) !!}
+            </script>
         @endpush
     @endonce
 @endif
