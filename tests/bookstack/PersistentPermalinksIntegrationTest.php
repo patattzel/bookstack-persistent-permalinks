@@ -46,6 +46,22 @@ class PersistentPermalinksIntegrationTest extends TestCase
         });
     }
 
+    public function test_revision_views_do_not_error_or_render_permalinks(): void
+    {
+        $this->withPersistentPermalinksModule(function (): void {
+            $page = $this->entities->page();
+            $revision = $page->refresh()->currentRevision;
+
+            $this->asAdmin()->get($page->getUrl('/revisions/' . $revision->id))
+                ->assertOk()
+                ->assertDontSee('data-copy-permalink', false);
+
+            $this->asAdmin()->get($page->getUrl('/revisions/' . $revision->id . '/changes'))
+                ->assertOk()
+                ->assertDontSee('data-copy-permalink', false);
+        });
+    }
+
     protected function withPersistentPermalinksModule(callable $callback): void
     {
         $this->usingThemeFolder(function () use ($callback): void {

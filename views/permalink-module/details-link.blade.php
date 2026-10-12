@@ -1,12 +1,15 @@
 @php
-    $permalinkUrl = match ($entity->getType()) {
-        'page' => url('/link/' . $entity->id),
-        'book' => url('/link/book/' . $entity->id),
-        'chapter' => url('/link/chapter/' . $entity->id),
-        'bookshelf' => url('/link/shelf/' . $entity->id),
+    $entityType = is_object($entity ?? null) && method_exists($entity, 'getType') ? $entity->getType() : null;
+    $entityId = $entity->id ?? null;
+
+    $permalinkUrl = match ($entityType) {
+        'page' => url('/link/' . $entityId),
+        'book' => url('/link/book/' . $entityId),
+        'chapter' => url('/link/chapter/' . $entityId),
+        'bookshelf' => url('/link/shelf/' . $entityId),
         default => null,
     };
-    $popupId = $permalinkUrl ? 'permalink-copy-popup-' . $entity->getType() . '-' . $entity->id : null;
+    $popupId = $permalinkUrl ? 'permalink-copy-popup-' . $entityType . '-' . $entityId : null;
 @endphp
 
 @if($permalinkUrl)
