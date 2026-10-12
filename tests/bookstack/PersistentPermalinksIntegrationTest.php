@@ -50,7 +50,19 @@ class PersistentPermalinksIntegrationTest extends TestCase
     {
         $this->withPersistentPermalinksModule(function (): void {
             $page = $this->entities->page();
-            $revision = $page->refresh()->currentRevision;
+            $this->asAdmin();
+
+            foreach (['Original content', 'Updated content'] as $content) {
+                $this->put($page->getUrl(), [
+                    'name' => $page->name,
+                    'html' => '<p>' . $content . '</p>',
+                    'changelog' => $content,
+                ])->assertRedirect();
+                $page->refresh();
+            }
+
+            $revision = $page->currentRevision;
+            $this->assertNotNull($revision);
 
             $this->asAdmin()->get($page->getUrl('/revisions/' . $revision->id))
                 ->assertOk()
